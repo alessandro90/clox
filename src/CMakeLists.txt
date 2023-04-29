@@ -38,6 +38,7 @@ add_compile_options(
     -Wredundant-decls
     # -Winline
     -Wlong-long
+    -Wimplicit-fallthrough=5
 )
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,undefined -g")
@@ -49,6 +50,7 @@ set(
     memory.c
     debug.c
     value.c
+    vm.c
 )
 
 add_executable(clox ${SRC_FILES})
