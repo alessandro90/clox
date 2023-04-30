@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
@@ -39,6 +41,7 @@ add_compile_options(
     # -Winline
     -Wlong-long
     -Wimplicit-fallthrough=5
+    -Wmissing-include-dirs
 )
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,undefined -g")
@@ -51,6 +54,8 @@ set(
     debug.c
     value.c
     vm.c
+    compiler.c
+    scanner.c
 )
 
 add_executable(clox ${SRC_FILES})
