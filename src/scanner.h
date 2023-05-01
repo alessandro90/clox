@@ -4,7 +4,7 @@
 #include "common.h"
 
 typedef enum {
-    TOKEN_LEFT_PARAREN,
+    TOKEN_LEFT_PAREN,
     TOKEN_RIGHT_PAREN,
     TOKEN_LEFT_BRACE,
     TOKEN_RIGHT_BRACE,
@@ -16,7 +16,7 @@ typedef enum {
     TOKEN_SLASH,
     TOKEN_STAR,
     TOKEN_BANG,
-    TOKEN_BAG_EQUAL,
+    TOKEN_BANG_EQUAL,
     TOKEN_EQUAL,
     TOKEN_EQUAL_EQUAL,
     TOKEN_GREATER,

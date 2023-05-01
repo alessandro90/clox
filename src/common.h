@@ -20,5 +20,6 @@ typedef int64_t i64;
 typedef size_t usize;
 
 #define DEBUG_TRACE_EXECUTION
+#define DEBUG_PRINT_CODE
 
 #endif

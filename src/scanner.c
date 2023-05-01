@@ -177,7 +177,7 @@ Token scanToken(void) {
     if (isDigit(c)) { return number(); }
 
     switch (c) {
-    case '(': return makeToken(TOKEN_LEFT_PARAREN);
+    case '(': return makeToken(TOKEN_LEFT_PAREN);
     case ')': return makeToken(TOKEN_RIGHT_PAREN);
     case '{': return makeToken(TOKEN_LEFT_BRACE);
     case '}': return makeToken(TOKEN_RIGHT_BRACE);
@@ -189,7 +189,7 @@ Token scanToken(void) {
     case '/': return makeToken(TOKEN_SLASH);
     case '*': return makeToken(TOKEN_STAR);
     case '!':
-        return makeToken(match('=') ? TOKEN_BAG_EQUAL : TOKEN_BANG);
+        return makeToken(match('=') ? TOKEN_BANG_EQUAL : TOKEN_BANG);
     case '=':
         return makeToken(match('=') ? TOKEN_EQUAL_EQUAL : TOKEN_EQUAL);
     case '<':

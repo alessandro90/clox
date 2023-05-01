@@ -29,7 +29,7 @@ void writeChunk(Chunk *chunk, u8 byte, usize line) {
     chunk->count++;
 }
 
-u8 addConstant(Chunk *chunk, Value value) {
+usize addConstant(Chunk *chunk, Value value) {
     writeValueArray(&chunk->constants, value);
-    return (u8)(chunk->constants.count - 1U);
+    return chunk->constants.count - 1U;
 }
