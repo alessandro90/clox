@@ -2,7 +2,7 @@
 #define CLOX_COMPILER_H
 
 #include "chunk.h"
-#include <stdbool.h>
+#include <stdbool.h>  // NOLINT
 
 bool compile(const char *source, Chunk *chunk);
 

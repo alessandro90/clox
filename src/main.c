@@ -62,7 +62,7 @@ static void runFile(const char *path) {
     free(source);
 
     if (result == INTERPRET_COMPILE_ERROR) exit(65);  // NOLINT
-    if (result == INTERPRET_INTERPRET_RUNTIME_ERROR) exit(70);  // NOLINT
+    if (result == INTERPRET_RUNTIME_ERROR) exit(70);  // NOLINT
 }
 
 int main(int argc, const char **argv) {

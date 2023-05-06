@@ -19,7 +19,6 @@ Checks: >
     -altera-id-dependent-backward-branch,
     -bugprone-exception-escape,
     -hicpp-uppercase-literal-suffix,
-    -readability-uppercase-literal-suffix,
     -bugprone-easily-swappable-parameters,
     -modernize-use-using,
     -hicpp-multiway-paths-covered
