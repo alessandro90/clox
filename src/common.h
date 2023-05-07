@@ -19,7 +19,9 @@ typedef int64_t i64;
 
 typedef size_t usize;
 
+// NOLINTNEXTLINE
 #define DEBUG_TRACE_EXECUTION
+// NOLINTNEXTLINE
 #define DEBUG_PRINT_CODE
 
 #endif

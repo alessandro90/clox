@@ -34,7 +34,7 @@ add_compile_options(
     -Wundef
     -Wunused-macros
     -Wcast-qual
-    -Wcast-align=strict
+    # -Wcast-align=strict
     -Wlogical-op
     -Wmissing-declarations
     -Wredundant-decls
@@ -56,6 +56,7 @@ set(
     vm.c
     compiler.c
     scanner.c
+    object.c
 )
 
 add_executable(clox ${SRC_FILES})

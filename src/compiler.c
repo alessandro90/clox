@@ -4,6 +4,7 @@
 #ifdef DEBUG_PRINT_CODE
 #include "debug.h"
 #endif
+#include "object.h"
 #include "scanner.h"
 #include "value.h"
 #include <stdio.h>
@@ -67,7 +68,7 @@ static void errorAt(Token const *token, const char *message) {
     parser.hadError = true;
 }
 
-__attribute__((unused)) static void error(const char *message) {
+static void error(const char *message) {
     errorAt(&parser.previous, message);
 }
 
@@ -166,9 +167,8 @@ static void binary(void) {
     case TOKEN_SLASH:
         emitByte(OP_DIVIDE);
         break;
-    default: {
-        return;
-    }
+    default:
+        __builtin_unreachable();
     }
 }
 
@@ -184,7 +184,7 @@ static void literal(void) {
         emitByte(OP_TRUE);
         break;
     default: {
-        return;
+        __builtin_unreachable();
     }
     }
 }
@@ -197,6 +197,10 @@ static void grouping(void) {
 static void number(void) {
     double const value = strtod(parser.previous.start, NULL);
     emitConstant(NUMBER_VAL(value));
+}
+
+static void string(void) {
+    emitConstant(OBJ_VAL(copyString(parser.previous.start + 1U, parser.previous.length - 2U)));
 }
 
 static void unary(void) {
@@ -212,7 +216,7 @@ static void unary(void) {
         emitByte(OP_NEGATE);
         break;
     default:
-        return;
+        __builtin_unreachable();
     }
 }
 
@@ -237,7 +241,7 @@ static ParseRule const rules[] = {
     [TOKEN_LESS] = {NULL, binary, PREC_COMPARISON},
     [TOKEN_LESS_EQUAL] = {NULL, binary, PREC_COMPARISON},
     [TOKEN_IDENTIFIER] = {NULL, NULL, PREC_NONE},
-    [TOKEN_STRING] = {NULL, NULL, PREC_NONE},
+    [TOKEN_STRING] = {string, NULL, PREC_NONE},
     [TOKEN_NUMBER] = {number, NULL, PREC_NONE},
     [TOKEN_AND] = {NULL, NULL, PREC_NONE},
     [TOKEN_CLASS] = {NULL, NULL, PREC_NONE},

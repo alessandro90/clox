@@ -1,7 +1,9 @@
 #include "value.h"
 #include "common.h"
 #include "memory.h"
+#include "object.h"
 #include <stdio.h>
+#include <string.h>
 
 void initValueArray(ValueArray *array) {
     array->count = 0;
@@ -35,6 +37,9 @@ void printValue(Value value) {
     case VAL_NUMBER:
         printf("%g", AS_NUMBER(value));
         break;
+    case VAL_OBJ:
+        printObject(value);
+        break;
     }
 }
 
@@ -50,6 +55,12 @@ bool valuesEqual(Value a, Value b) {
 #pragma GCC diagnostic ignored "-Wfloat-equal"
         return AS_NUMBER(a) == AS_NUMBER(b);
 #pragma GCC diagnostic pop
+    case VAL_OBJ: {
+        ObjString const *aString = AS_STRING(a);
+        ObjString const *bString = AS_STRING(b);
+        return aString->length == bString->length
+               && memcmp(aString->chars, bString->chars, aString->length) == 0;
+    }
     }
     __builtin_unreachable();
 }
