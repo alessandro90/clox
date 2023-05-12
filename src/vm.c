@@ -7,6 +7,7 @@
 #include "object.h"
 #include "stdarg.h"
 #include "stdio.h"
+#include "table.h"
 #include "value.h"
 #include <string.h>
 
@@ -135,9 +136,12 @@ static InterpretResult run(void) {
             }
             push(NUMBER_VAL(-AS_NUMBER(pop())));
             break;
-        case OP_RETURN:
+        case OP_PRINT: {
             printValue(pop());
             printf("\n");
+            break;
+        }
+        case OP_RETURN:
             return INTERPRET_OK;
         }
     }
@@ -150,9 +154,11 @@ static InterpretResult run(void) {
 void initVM(void) {
     resetStack();
     vm.objects = NULL;
+    initTable(&vm.strings);
 }
 
 void freeVM(void) {
+    freeTable(&vm.strings);
     freeObjects();
 }
 

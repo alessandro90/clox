@@ -56,10 +56,7 @@ bool valuesEqual(Value a, Value b) {
         return AS_NUMBER(a) == AS_NUMBER(b);
 #pragma GCC diagnostic pop
     case VAL_OBJ: {
-        ObjString const *aString = AS_STRING(a);
-        ObjString const *bString = AS_STRING(b);
-        return aString->length == bString->length
-               && memcmp(aString->chars, bString->chars, aString->length) == 0;
+        return AS_OBJ(a) == AS_OBJ(b);
     }
     }
     __builtin_unreachable();

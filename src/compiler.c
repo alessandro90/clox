@@ -43,6 +43,8 @@ Parser parser;  // NOLINT
 Chunk *compilingChunk;  // NOLINT
 
 static void expression(void);
+static void statement(void);
+static void declaration(void);
 static ParseRule const *getRule(TokenType type);
 static void parsePrecedence(Precedence precedence);
 
@@ -93,6 +95,16 @@ static void consume(TokenType type, const char *message) {
         return;
     }
     errorAtCurrent(message);
+}
+
+static bool check(TokenType type) {
+    return parser.current.type == type;
+}
+
+static bool match(TokenType type) {
+    if (!check(type)) { return false; }
+    advance();
+    return true;
 }
 
 static void emitByte(u8 byte) {
@@ -287,6 +299,22 @@ static void expression(void) {
     parsePrecedence(PREC_ASSIGNMENT);
 }
 
+static void printStatement(void) {
+    expression();
+    consume(TOKEN_SEMICOLON, "Expect ';' after value");
+    emitByte(OP_PRINT);
+}
+
+static void declaration(void) {
+    statement();
+}
+
+void statement(void) {
+    if (match(TOKEN_PRINT)) {
+        printStatement();
+    }
+}
+
 bool compile(const char *source, Chunk *chunk) {
     initScanner(source);
     compilingChunk = chunk;
@@ -295,8 +323,11 @@ bool compile(const char *source, Chunk *chunk) {
     parser.panicMode = false;
 
     advance();
-    expression();
-    consume(TOKEN_EOF, "Expect end of expression.");
+
+    while (!match(TOKEN_EOF)) {
+        declaration();
+    }
+
     endCompiler();
     return !parser.hadError;
 }

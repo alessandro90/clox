@@ -57,6 +57,7 @@ set(
     compiler.c
     scanner.c
     object.c
+    table.c
 )
 
 add_executable(clox ${SRC_FILES})

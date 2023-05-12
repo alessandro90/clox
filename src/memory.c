@@ -17,7 +17,7 @@ void *reallocate(void *pointer, usize oldSize, usize newSize) {
     return result;
 }
 
-void freeObject(Obj *object) {
+static void freeObject(Obj *object) {
     switch (object->type) {
     case OBJ_STRING: {
         ObjString *string = (ObjString *)object;
