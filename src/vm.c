@@ -55,6 +55,7 @@ static void concatenate(void) {
 static InterpretResult run(void) {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+#define READ_STRING() AS_STRING(READ_CONSTANT())
 #define BINARY_OP(valueType, op)                          \
     do {                                                  \
         if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \
@@ -96,6 +97,12 @@ static InterpretResult run(void) {
         case OP_POP:
             pop();
             break;
+        case OP_DEFINE_GLOBAL: {
+            ObjString *name = READ_STRING();
+            tableSet(&vm.globals, name, peek(0));
+            pop();
+            break;
+        }
         case OP_EQUAL: {
             Value const b = pop();
             Value const a = pop();
@@ -150,6 +157,7 @@ static InterpretResult run(void) {
     }
 
 #undef BINARY_OP
+#undef READ_STRING
 #undef READ_CONSTANT
 #undef READ_BYTE
 }
@@ -157,10 +165,12 @@ static InterpretResult run(void) {
 void initVM(void) {
     resetStack();
     vm.objects = NULL;
+    initTable(&vm.globals);
     initTable(&vm.strings);
 }
 
 void freeVM(void) {
+    freeTable(&vm.globals);
     freeTable(&vm.strings);
     freeObjects();
 }

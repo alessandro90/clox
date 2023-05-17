@@ -295,8 +295,32 @@ static void parsePrecedence(Precedence precedence) {
     }
 }
 
+static u8 identifierConstant(Token *name) {
+    return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
+}
+
+static u8 parseVariable(const char *errorMessage) {
+    consume(TOKEN_IDENTIFIER, errorMessage);
+    return identifierConstant(&parser.previous);
+}
+
+static void defineVariable(u8 global) {
+    emitBytes(OP_DEFINE_GLOBAL, global);
+}
+
 static void expression(void) {
     parsePrecedence(PREC_ASSIGNMENT);
+}
+
+static void varDeclaration(void) {
+    u8 const global = parseVariable("Expect variable name.");
+    if (match(TOKEN_EQUAL)) {
+        expression();
+    } else {
+        emitByte(OP_NIL);
+    }
+    consume(TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
+    defineVariable(global);
 }
 
 static void expressionStatement(void) {
@@ -333,7 +357,11 @@ static void synchronize(void) {
 }
 
 static void declaration(void) {
-    statement();
+    if (match(TOKEN_VAR)) {
+        varDeclaration();
+    } else {
+        statement();
+    }
 
     if (parser.panicMode) {
         synchronize();

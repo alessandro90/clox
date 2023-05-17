@@ -27,12 +27,12 @@ static ObjString *allocateString(char *chars, usize length, u32 hash) {
 }
 
 static u32 hashString(const char *key, usize length) {
-    u32 hash = 2166136261U;  // NOLINT
+    u64 hash = 2166136261U;  // NOLINT
     for (usize i = 0; i < length; ++i) {
-        hash ^= (u32)key[i];
+        hash ^= (u64)key[i];
         hash *= 16777619U;  // NOLINT
     }
-    return hash;
+    return (u32)hash;
 }
 
 ObjString *takeString(char *chars, usize length) {
