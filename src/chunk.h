@@ -20,6 +20,7 @@ typedef enum {
     OP_NEGATE,
     OP_PRINT,
     OP_RETURN,
+    OP_POP,
 } OpCode;
 
 typedef struct {

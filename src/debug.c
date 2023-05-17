@@ -63,6 +63,8 @@ usize disassembleInstruction(Chunk const *chunk, usize offset) {
         return simpleInstruction("OP_GREATER", offset);
     case OP_LESS:
         return simpleInstruction("OP_LESS", offset);
+    case OP_POP:
+        return simpleInstruction("OP_POP", offset);
     }
     printf("Unknown opcode %d\n", (i32)instruction);
     return offset + 1U;
