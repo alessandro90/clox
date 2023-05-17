@@ -52,7 +52,7 @@ ObjString *copyString(const char *chars, usize length) {
     heapChars[length] = '\0';
     u32 const hash = hashString(chars, length);
     ObjString *interned = tableFindString(&vm.strings, chars, length, hash);
-    if (interned == NULL) { return interned; }
+    if (interned != NULL) { return interned; }
     return allocateString(heapChars, length, hash);
 }
 
