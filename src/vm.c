@@ -113,6 +113,15 @@ static InterpretResult run(void) {
             pop();
             break;
         }
+        case OP_SET_GLOBAL: {
+            ObjString *name = READ_STRING();
+            if (tableSet(&vm.globals, name, peek(0))) {
+                tableDelete(&vm.globals, name);
+                runtimeError("Undefined variable '%s'.", name->chars);
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            break;
+        }
         case OP_EQUAL: {
             Value const b = pop();
             Value const a = pop();

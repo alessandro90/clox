@@ -31,7 +31,7 @@ typedef enum {
     PREC_PRIMARY,
 } Precedence;
 
-typedef void (*ParseFn)(void);
+typedef void (*ParseFn)(bool);
 
 typedef struct {
     ParseFn prefix;
@@ -144,7 +144,8 @@ static void endCompiler(void) {
 #endif
 }
 
-static void binary(void) {
+static void binary(bool canAssign) {
+    (void)canAssign;
     TokenType const operatorType = parser.previous.type;
     ParseRule const *rule = getRule(operatorType);
     parsePrecedence((Precedence)(rule->precedence + 1));
@@ -185,7 +186,8 @@ static void binary(void) {
     }
 }
 
-static void literal(void) {
+static void literal(bool canAssign) {
+    (void)canAssign;
     switch (parser.previous.type) {
     case TOKEN_FALSE:
         emitByte(OP_FALSE);
@@ -202,30 +204,39 @@ static void literal(void) {
     }
 }
 
-static void grouping(void) {
+static void grouping(bool canAssign) {
+    (void)canAssign;
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
-static void number(void) {
+static void number(bool canAssign) {
+    (void)canAssign;
     double const value = strtod(parser.previous.start, NULL);
     emitConstant(NUMBER_VAL(value));
 }
 
-static void string(void) {
+static void string(bool canAssign) {
+    (void)canAssign;
     emitConstant(OBJ_VAL(copyString(parser.previous.start + 1U, parser.previous.length - 2U)));
 }
 
-static void namedVariable(Token name) {
+static void namedVariable(Token name, bool canAssign) {
     u8 const arg = identifierConstant(&name);
-    emitBytes(OP_GET_GLOBAL, arg);
+    if (canAssign && match(TOKEN_EQUAL)) {
+        expression();
+        emitBytes(OP_SET_GLOBAL, arg);
+    } else {
+        emitBytes(OP_GET_GLOBAL, arg);
+    }
 }
 
-static void variable(void) {
-    namedVariable(parser.previous);
+static void variable(bool canAssign) {
+    namedVariable(parser.previous, canAssign);
 }
 
-static void unary(void) {
+static void unary(bool canAssign) {
+    (void)canAssign;
     TokenType const operatorType = parser.previous.type;
 
     parsePrecedence(PREC_UNARY);
@@ -296,12 +307,17 @@ static void parsePrecedence(Precedence precedence) {
         error("Expect expression.");
         return;
     }
-    prefixRule();
+    bool const canAssign = precedence <= PREC_ASSIGNMENT;
+    prefixRule(canAssign);
 
     while (precedence <= getRule(parser.current.type)->precedence) {
         advance();
         ParseFn const infixRule = getRule(parser.previous.type)->infix;
-        infixRule();
+        infixRule(canAssign);
+    }
+
+    if (canAssign && match(TOKEN_EQUAL)) {
+        error("Invalid assignment target.");
     }
 }
 
