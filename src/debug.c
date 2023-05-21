@@ -9,6 +9,12 @@ static usize simpleInstruction(const char *name, usize offset) {
     return offset + 1U;
 }
 
+static usize byteInstruction(const char *name, Chunk const *chunk, usize offset) {
+    u8 const slot = chunk->code[offset + 1U];
+    printf("%-16s %4u\n", name, slot);
+    return offset + 2U;
+}
+
 static usize constantInstruction(const char *name, Chunk const *chunk, usize offset) {
     u8 const constant = chunk->code[offset + 1U];
     printf("%-16s %4d '", name, constant);
@@ -71,6 +77,10 @@ usize disassembleInstruction(Chunk const *chunk, usize offset) {
         return constantInstruction("OP_GET_GLOBAL", chunk, offset);
     case OP_SET_GLOBAL:
         return constantInstruction("OP_SET_GLOBAL", chunk, offset);
+    case OP_GET_LOCAL:
+        return byteInstruction("OP_GET_LOCAL", chunk, offset);
+    case OP_SET_LOCAL:
+        return byteInstruction("OP_SET_LOCAL", chunk, offset);
     }
     printf("Unknown opcode %d\n", (i32)instruction);
     return offset + 1U;

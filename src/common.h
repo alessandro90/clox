@@ -24,4 +24,7 @@ typedef size_t usize;
 // NOLINTNEXTLINE
 #define DEBUG_PRINT_CODE
 
+// NOLINTNEXTLINE
+#define UINT8_COUNT (UINT8_MAX + 1U)
+
 #endif
