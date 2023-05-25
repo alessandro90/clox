@@ -2,6 +2,7 @@
 
 #include "chunk.h"
 #include "common.h"
+#include <stdint.h>
 #include <string.h>
 #ifdef DEBUG_PRINT_CODE
 #include "debug.h"
@@ -132,6 +133,13 @@ static void emitBytes(u8 byte1, u8 byte2) {
     emitByte(byte2);
 }
 
+static usize emitJump(OpCode instruction) {
+    emitByte((u8)instruction);
+    emitByte(0xFF);  // NOLINT
+    emitByte(0xFF);  // NOLINT
+    return currentChunk()->count - 2U;
+}
+
 static void emitReturn(void) {
     emitByte(OP_RETURN);
 }
@@ -148,6 +156,15 @@ static u8 makeConstant(Value value) {
 
 static void emitConstant(Value value) {
     emitBytes(OP_CONSTANT, makeConstant(value));
+}
+
+static void patchJump(usize offset) {
+    usize const jump = currentChunk()->count - offset - 2U;
+    if (jump > UINT16_MAX) {
+        error("Too many code jump over.");
+    }
+    currentChunk()->code[offset] = (jump >> 8) & 0xFF;  // NOLINT
+    currentChunk()->code[offset + 1] = jump & 0xFF;  // NOLINT
 }
 
 static void initCompiler(Compiler *compiler) {
@@ -455,6 +472,16 @@ static void varDeclaration(void) {
     defineVariable(global);
 }
 
+static void ifStatement(void) {
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
+    expression();
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after consition.");
+
+    usize const thenJump = emitJump(OP_JUMP_IF_FALSE);
+    statement();
+    patchJump(thenJump);
+}
+
 static void expressionStatement(void) {
     expression();
     consume(TOKEN_SEMICOLON, "Expect ';' after expression.");
@@ -503,6 +530,8 @@ static void declaration(void) {
 void statement(void) {
     if (match(TOKEN_PRINT)) {
         printStatement();
+    } else if (match(TOKEN_IF)) {
+        ifStatement();
     } else if (match(TOKEN_LEFT_BRACE)) {
         beginScope();
         block();
