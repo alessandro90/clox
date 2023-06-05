@@ -182,6 +182,11 @@ static InterpretResult run(void) {
             printf("\n");
             break;
         }
+        case OP_JUMP: {
+            u16 const offset = READ_SHORT();
+            vm.ip += offset;
+            break;
+        }
         case OP_JUMP_IF_FALSE: {
             u16 const offset = READ_SHORT();
             if (isFalsey(peek(0))) { vm.ip += offset; }

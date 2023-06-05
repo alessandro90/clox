@@ -478,8 +478,18 @@ static void ifStatement(void) {
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after consition.");
 
     usize const thenJump = emitJump(OP_JUMP_IF_FALSE);
+    emitByte(OP_POP);
     statement();
+
+    usize const elseJump = emitJump(OP_JUMP);
+
     patchJump(thenJump);
+    emitByte(OP_POP);
+
+    if (match(TOKEN_ELSE)) {
+        statement();
+    }
+    patchJump(elseJump);
 }
 
 static void expressionStatement(void) {

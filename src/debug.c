@@ -15,6 +15,13 @@ static usize byteInstruction(const char *name, Chunk const *chunk, usize offset)
     return offset + 2U;
 }
 
+static usize jumpInstruction(const char *name, i32 sign, Chunk const *chunk, usize offset) {
+    u16 jump = (u16)(chunk->code[offset + 1U] << 8U);  // NOLINT
+    jump |= chunk->code[offset + 2U];
+    printf("%-16s %4lu -> %d\n", name, offset, (i32)offset + 3 + sign * (i32)jump);
+    return offset + 3U;
+}
+
 static usize constantInstruction(const char *name, Chunk const *chunk, usize offset) {
     u8 const constant = chunk->code[offset + 1U];
     printf("%-16s %4d '", name, constant);
@@ -81,6 +88,10 @@ usize disassembleInstruction(Chunk const *chunk, usize offset) {
         return byteInstruction("OP_GET_LOCAL", chunk, offset);
     case OP_SET_LOCAL:
         return byteInstruction("OP_SET_LOCAL", chunk, offset);
+    case OP_JUMP_IF_FALSE:
+        return jumpInstruction("OP_JUMP_IF_FALSE", 1, chunk, offset);
+    case OP_JUMP:
+        return jumpInstruction("OP_JUMP", 1, chunk, offset);
     }
     printf("Unknown opcode %d\n", (i32)instruction);
     return offset + 1U;
