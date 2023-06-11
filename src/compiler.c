@@ -64,6 +64,7 @@ static ParseRule const *getRule(TokenType type);
 static void parsePrecedence(Precedence precedence);
 static u8 identifierConstant(Token *name);
 static i32 resolveLocal(Compiler *compiler, Token *name);
+static void and_(bool canAssign);
 
 static Chunk *currentChunk(void) {
     return compilingChunk;
@@ -131,6 +132,15 @@ static void emitByte(u8 byte) {
 static void emitBytes(u8 byte1, u8 byte2) {
     emitByte(byte1);
     emitByte(byte2);
+}
+
+static void emitLoop(usize loopStart) {
+    emitByte(OP_LOOP);
+    usize const offset = 2U + currentChunk()->count - loopStart;
+    if (offset > UINT16_MAX) { error("Loop body too large"); }
+
+    emitByte((offset >> 8U) & 0xFFU);  // NOLINT
+    emitByte(offset & 0xFFU);  // NOLINT
 }
 
 static usize emitJump(OpCode instruction) {
@@ -268,6 +278,16 @@ static void number(bool canAssign) {
     emitConstant(NUMBER_VAL(value));
 }
 
+static void or_(bool canAssign) {
+    (void)canAssign;
+    usize const elseJump = emitJump(OP_JUMP_IF_FALSE);
+    usize const endJump = emitJump(OP_JUMP);
+    patchJump(elseJump);
+    emitByte(OP_POP);
+    parsePrecedence(PREC_OR);
+    patchJump(endJump);
+}
+
 static void string(bool canAssign) {
     (void)canAssign;
     emitConstant(OBJ_VAL(copyString(parser.previous.start + 1U, parser.previous.length - 2U)));
@@ -336,7 +356,7 @@ static ParseRule const rules[] = {
     [TOKEN_IDENTIFIER] = {variable, NULL, PREC_NONE},
     [TOKEN_STRING] = {string, NULL, PREC_NONE},
     [TOKEN_NUMBER] = {number, NULL, PREC_NONE},
-    [TOKEN_AND] = {NULL, NULL, PREC_NONE},
+    [TOKEN_AND] = {NULL, and_, PREC_AND},
     [TOKEN_CLASS] = {NULL, NULL, PREC_NONE},
     [TOKEN_ELSE] = {NULL, NULL, PREC_NONE},
     [TOKEN_FALSE] = {literal, NULL, PREC_NONE},
@@ -344,7 +364,7 @@ static ParseRule const rules[] = {
     [TOKEN_FUN] = {NULL, NULL, PREC_NONE},
     [TOKEN_IF] = {NULL, NULL, PREC_NONE},
     [TOKEN_NIL] = {literal, NULL, PREC_NONE},
-    [TOKEN_OR] = {NULL, NULL, PREC_NONE},
+    [TOKEN_OR] = {NULL, or_, PREC_OR},
     [TOKEN_PRINT] = {NULL, NULL, PREC_NONE},
     [TOKEN_RETURN] = {NULL, NULL, PREC_NONE},
     [TOKEN_SUPER] = {NULL, NULL, PREC_NONE},
@@ -450,6 +470,14 @@ static void defineVariable(u8 global) {
     emitBytes(OP_DEFINE_GLOBAL, global);
 }
 
+static void and_(bool canAssign) {
+    (void)canAssign;
+    usize const endJump = emitJump(OP_JUMP_IF_FALSE);
+    emitByte(OP_POP);
+    parsePrecedence(PREC_AND);
+    patchJump(endJump);
+}
+
 static void expression(void) {
     parsePrecedence(PREC_ASSIGNMENT);
 }
@@ -504,6 +532,21 @@ static void printStatement(void) {
     emitByte(OP_PRINT);
 }
 
+static void whileStatement(void) {
+    usize const loopStart = currentChunk()->count;
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
+    expression();
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+
+    usize const exitJump = emitJump(OP_JUMP_IF_FALSE);
+    emitByte(OP_POP);
+    statement();
+    emitLoop(loopStart);
+
+    patchJump(exitJump);
+    emitByte(OP_POP);
+}
+
 static void synchronize(void) {
     parser.panicMode = false;
 
@@ -542,6 +585,8 @@ void statement(void) {
         printStatement();
     } else if (match(TOKEN_IF)) {
         ifStatement();
+    } else if (match(TOKEN_WHILE)) {
+        whileStatement();
     } else if (match(TOKEN_LEFT_BRACE)) {
         beginScope();
         block();
