@@ -526,6 +526,57 @@ static void expressionStatement(void) {
     emitByte(OP_POP);
 }
 
+static void forStatement(void) {
+    beginScope();
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
+    if (match(TOKEN_SEMICOLON)) {
+        // No initilaizer
+    } else if (match(TOKEN_VAR)) {
+        varDeclaration();
+    } else {
+        expressionStatement();
+    }
+
+    // The loop goes like this:
+    // - run the exit condition
+    // - skip the increment /0
+    // - run the body
+    // - goto increment and execute it
+    // - goto to exit condition
+    // - repeat from /0
+    usize loopStart = currentChunk()->count;
+    usize exitJump = SIZE_MAX;
+    if (!match(TOKEN_SEMICOLON)) {
+        expression();
+        consume(TOKEN_SEMICOLON, "Expect ';' after loop condition.");
+        exitJump = emitJump(OP_JUMP_IF_FALSE);
+        emitByte(OP_POP);
+    }
+    consume(TOKEN_SEMICOLON, "Expect ';'.");
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after for clauses.");
+
+    if (!match(TOKEN_RIGHT_PAREN)) {
+        usize const bodyJump = emitJump(OP_JUMP);
+        usize const incrementStart = currentChunk()->count;
+        expression();
+        emitByte(OP_POP);
+        consume(TOKEN_RIGHT_PAREN, "Expect ')' after for clauses.");
+
+        emitLoop(loopStart);
+        loopStart = incrementStart;
+        patchJump(bodyJump);
+    }
+
+    statement();
+    emitLoop(loopStart);
+
+    if (exitJump != SIZE_MAX) {
+        patchJump(exitJump);
+        emitByte(OP_POP);
+    }
+    endScope();
+}
+
 static void printStatement(void) {
     expression();
     consume(TOKEN_SEMICOLON, "Expect ';' after value");
@@ -583,6 +634,8 @@ static void declaration(void) {
 void statement(void) {
     if (match(TOKEN_PRINT)) {
         printStatement();
+    } else if (match(TOKEN_FOR)) {
+        forStatement();
     } else if (match(TOKEN_IF)) {
         ifStatement();
     } else if (match(TOKEN_WHILE)) {
