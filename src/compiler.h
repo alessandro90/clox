@@ -2,8 +2,9 @@
 #define CLOX_COMPILER_H
 
 #include "chunk.h"
+#include "object.h"
 #include <stdbool.h>  // NOLINT
 
-bool compile(const char *source, Chunk *chunk);
+ObjFunction *compile(const char *source, Chunk *chunk);
 
 #endif
