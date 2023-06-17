@@ -47,7 +47,14 @@ typedef struct {
     i32 depth;
 } Local;
 
+typedef enum {
+    TYPE_FUNCTION,
+    TYPE_SCRIPT,
+} FunctionType;
+
 typedef struct {
+    ObjFunction *function;
+    FunctionType type;
     Local locals[UINT8_COUNT];
     usize localCount;
     i32 scopeDepth;
@@ -67,7 +74,7 @@ static i32 resolveLocal(Compiler *compiler, Token *name);
 static void and_(bool canAssign);
 
 static Chunk *currentChunk(void) {
-    return compilingChunk;
+    return &current->function->chunk;
 }
 
 static void errorAt(Token const *token, const char *message) {
