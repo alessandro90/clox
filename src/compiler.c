@@ -62,7 +62,6 @@ typedef struct {
 
 Parser parser;  // NOLINT
 Compiler *current = NULL;  // NOLINT
-Chunk *compilingChunk;  // NOLINT
 
 static void expression(void);
 static void statement(void);
@@ -669,11 +668,10 @@ void statement(void) {
     }
 }
 
-ObjFunction *compile(const char *source, Chunk *chunk) {
+ObjFunction *compile(const char *source) {
     initScanner(source);
     Compiler compiler;
     initCompiler(&compiler, TYPE_SCRIPT);
-    compilingChunk = chunk;
 
     parser.hadError = false;
     parser.panicMode = false;

@@ -5,6 +5,6 @@
 #include "object.h"
 #include <stdbool.h>  // NOLINT
 
-ObjFunction *compile(const char *source, Chunk *chunk);
+ObjFunction *compile(const char *source);
 
 #endif

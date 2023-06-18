@@ -15,6 +15,7 @@ VM vm;  // NOLINT
 
 static void resetStack(void) {
     vm.stackTop = vm.stack;
+    vm.frameCount = 0;
 }
 
 static void runtimeError(const char *format, ...) {
@@ -23,8 +24,9 @@ static void runtimeError(const char *format, ...) {
     (void)vfprintf(stderr, format, args);  // NOLINT
     va_end(args);
     (void)fputs("\n", stderr);
-    usize const instruction = (usize)(vm.ip - vm.chunk->code - 1U);
-    usize const line = vm.chunk->lines[instruction];
+    CallFrame *frame = &vm.frames[vm.frameCount - 1];
+    usize const instruction = (usize)(frame->ip - frame->function->chunk.code - 1U);
+    usize const line = frame->function->chunk.lines[instruction];
     (void)fprintf(stderr, "[line %d] in script\n", (i32)line);
     resetStack();
 }
@@ -53,10 +55,12 @@ static void concatenate(void) {
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 static InterpretResult run(void) {
-#define READ_BYTE() (*vm.ip++)
-#define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+    CallFrame *frame = &vm.frames[vm.frameCount - 1];
+
+#define READ_BYTE() (*frame->ip++)
+#define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
 #define READ_SHORT() \
-    (vm.ip += 2U, (u16)((u16)(vm.ip[-2] << 8U) | vm.ip[-1]))
+    (frame->ip += 2U, (u16)((u16)(frame->ip[-2] << 8U) | frame->ip[-1]))
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 #define BINARY_OP(valueType, op)                          \
     do {                                                  \
@@ -78,7 +82,7 @@ static InterpretResult run(void) {
             printf(" ]");
         }
         printf("\n");
-        disassembleInstruction(vm.chunk, (usize)(vm.ip - vm.chunk->code));
+        disassembleInstruction(&frame->function->chunk, (usize)(frame->ip - frame->function->chunk.code));
 #endif
         u8 const instruction = READ_BYTE();
         switch (instruction) {
@@ -101,12 +105,12 @@ static InterpretResult run(void) {
             break;
         case OP_GET_LOCAL: {
             u8 const slot = READ_BYTE();
-            push(vm.stack[slot]);
+            push(frame->slots[slot]);
             break;
         }
         case OP_SET_LOCAL: {
             u8 const slot = READ_BYTE();
-            vm.stack[slot] = peek(0);
+            frame->slots[slot] = peek(0);
             break;
         }
         case OP_GET_GLOBAL: {
@@ -184,17 +188,17 @@ static InterpretResult run(void) {
         }
         case OP_JUMP: {
             u16 const offset = READ_SHORT();
-            vm.ip += offset;
+            frame->ip += offset;
             break;
         }
         case OP_JUMP_IF_FALSE: {
             u16 const offset = READ_SHORT();
-            if (isFalsey(peek(0))) { vm.ip += offset; }
+            if (isFalsey(peek(0))) { frame->ip += offset; }
             break;
         }
         case OP_LOOP: {
             u16 const offset = READ_SHORT();
-            vm.ip -= offset;
+            frame->ip -= offset;
             break;
         }
         case OP_RETURN:
@@ -233,19 +237,14 @@ Value pop(void) {
 }
 
 InterpretResult interpret(const char *source) {
-    Chunk chunk;
-    initChunk(&chunk);
+    ObjFunction *function = compile(source);
+    if (function == NULL) { return INTERPRET_COMPILE_ERROR; }
 
-    if (!compile(source, &chunk)) {
-        freeChunk(&chunk);
-        return INTERPRET_COMPILE_ERROR;
-    }
+    push(OBJ_VAL(function));
+    CallFrame *frame = &vm.frames[vm.frameCount++];
+    frame->function = function;
+    frame->ip = function->chunk.code;
+    frame->slots = vm.stack;
 
-    vm.chunk = &chunk;
-    vm.ip = vm.chunk->code;
-
-    InterpretResult const result = run();
-
-    freeChunk(&chunk);
-    return result;
+    return run();
 }
