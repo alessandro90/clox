@@ -472,12 +472,15 @@ static u8 parseVariable(const char *errorMessage) {
     consume(TOKEN_IDENTIFIER, errorMessage);
 
     declareVariable();
-    if (current->localCount > 0) { return 0; }
+    if (current->scopeDepth > 0) { return 0; }
 
     return identifierConstant(&parser.previous);
 }
 
 static void markInitialized(void) {
+    if (current->scopeDepth == 0) {
+        return;
+    }
     current->locals[current->localCount - 1U].depth = current->scopeDepth;
 }
 
@@ -506,6 +509,28 @@ static void block(void) {
         declaration();
     }
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after block.");
+}
+
+static void function(FunctionType type) {
+    Compiler compiler;
+    initCompiler(&compiler, type);
+    beginScope();
+
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after function name.");
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+    consume(TOKEN_LEFT_BRACE, "Expect '{' before function body.");
+    block();
+
+    ObjFunction *function = endCompiler();
+    emitBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
+}
+
+static void funDeclaration(void) {
+    u8 const global = parseVariable("Expect function name.");
+    // mark initialized here to allow recursion
+    markInitialized();
+    function(TYPE_FUNCTION);
+    defineVariable(global);
 }
 
 static void varDeclaration(void) {
@@ -639,7 +664,9 @@ static void synchronize(void) {
 }
 
 static void declaration(void) {
-    if (match(TOKEN_VAR)) {
+    if (match(TOKEN_FUN)) {
+        funDeclaration();
+    } else if (match(TOKEN_VAR)) {
         varDeclaration();
     } else {
         statement();
