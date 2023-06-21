@@ -72,6 +72,7 @@ static void parsePrecedence(Precedence precedence);
 static u8 identifierConstant(Token *name);
 static i32 resolveLocal(Compiler *compiler, Token *name);
 static void and_(bool canAssign);
+static u8 argumentList(void);
 
 static Chunk *currentChunk(void) {
     return &current->function->chunk;
@@ -274,6 +275,12 @@ static void binary(bool canAssign) {
     }
 }
 
+static void call(bool canAssign) {
+    (void)canAssign;
+    u8 const argCount = argumentList();
+    emitBytes(OP_CALL, argCount);
+}
+
 static void literal(bool canAssign) {
     (void)canAssign;
     switch (parser.previous.type) {
@@ -360,7 +367,7 @@ static void unary(bool canAssign) {
 }
 
 static ParseRule const rules[] = {
-    [TOKEN_LEFT_PAREN] = {grouping, NULL, PREC_NONE},
+    [TOKEN_LEFT_PAREN] = {grouping, call, PREC_CALL},
     [TOKEN_RIGHT_PAREN] = {NULL, NULL, PREC_NONE},
     [TOKEN_LEFT_BRACE] = {NULL, NULL, PREC_NONE},
     [TOKEN_RIGHT_BRACE] = {NULL, NULL, PREC_NONE},
@@ -497,6 +504,21 @@ static void defineVariable(u8 global) {
         return;
     }
     emitBytes(OP_DEFINE_GLOBAL, global);
+}
+
+static u8 argumentList(void) {
+    u8 argCount = 0;
+    if (!check(TOKEN_RIGHT_PAREN)) {
+        do {
+            expression();
+            if (argCount == UINT8_MAX) {
+                error("Can't have more than 255 arguments.");
+            }
+            ++argCount;
+        } while (match(TOKEN_COMMA));
+    }
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
+    return argCount;
 }
 
 static void and_(bool canAssign) {
