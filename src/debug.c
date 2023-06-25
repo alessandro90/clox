@@ -94,6 +94,8 @@ usize disassembleInstruction(Chunk const *chunk, usize offset) {
         return jumpInstruction("OP_JUMP", 1, chunk, offset);
     case OP_LOOP:
         return jumpInstruction("OP_LOOP", -1, chunk, offset);
+    case OP_CALL:
+        return byteInstruction("OP_CALL", chunk, offset);
     }
     printf("Unknown opcode %d\n", (i32)instruction);
     return offset + 1U;
