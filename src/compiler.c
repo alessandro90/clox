@@ -159,6 +159,7 @@ static usize emitJump(OpCode instruction) {
 }
 
 static void emitReturn(void) {
+    emitByte(OP_NIL);
     emitByte(OP_RETURN);
 }
 

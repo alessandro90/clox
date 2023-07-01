@@ -239,8 +239,19 @@ static InterpretResult run(void) {
             frame->ip -= offset;
             break;
         }
-        case OP_RETURN:
-            return INTERPRET_OK;
+        case OP_RETURN: {
+            Value const result = pop();
+            --vm.frameCount;
+            // Last frame. Pop the main scrip function
+            if (vm.frameCount == 0) {
+                pop();
+                return INTERPRET_OK;
+            }
+            vm.stackTop = frame->slots;
+            push(result);
+            frame = &vm.frames[vm.frameCount - 1];
+            break;
+        }
         case OP_CALL: {
             i32 const argCount = READ_BYTE();
             if (!callValue(peek(argCount), argCount)) {
