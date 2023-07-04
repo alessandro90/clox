@@ -2,6 +2,7 @@
 
 #include "chunk.h"
 #include "common.h"
+#include <assert.h>
 #include <stdint.h>
 #include <string.h>
 #ifdef DEBUG_PRINT_CODE
@@ -441,7 +442,8 @@ static u8 identifierConstant(Token *name) {
 
 static bool identifiersEqual(Token *a, Token *b) {
     if (a->length != b->length) { return false; }
-    return memcmp(a->start, b->start, a->length);
+    assert(a != NULL && b != NULL && a->start != NULL && b->start != NULL);
+    return memcmp(a->start, b->start, a->length) == 0;
 }
 
 static i32 resolveLocal(Compiler *compiler, Token *name) {
@@ -730,7 +732,7 @@ static void declaration(void) {
     }
 }
 
-void statement(void) {
+static void statement(void) {
     if (match(TOKEN_PRINT)) {
         printStatement();
     } else if (match(TOKEN_FOR)) {
