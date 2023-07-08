@@ -34,7 +34,7 @@ static void runtimeError(const char *format, ...) {
 
     for (i32 i = vm.frameCount - 1; i >= 0; --i) {
         CallFrame *frame = &vm.frames[i];
-        ObjFunction *function = frame->function;
+        ObjFunction *function = frame->closure->function;
         usize const instruction = (usize)(frame->ip - function->chunk.code - 1U);
         (void)fprintf(stderr, "[line %zu] in ", function->chunk.lines[instruction]);
         if (function->name == NULL) {
@@ -59,9 +59,9 @@ static Value peek(i32 distance) {
     return vm.stackTop[-1 - distance];
 }
 
-static bool call(ObjFunction *function, i32 argCount) {
-    if ((usize)argCount != function->arity) {
-        runtimeError("Expected %d arguments but got %d.", function->arity, argCount);
+static bool call(ObjClosure *closure, i32 argCount) {
+    if ((usize)argCount != closure->function->arity) {
+        runtimeError("Expected %d arguments but got %d.", closure->function->arity, argCount);
         return false;
     }
     if (vm.frameCount == FRAMES_MAX) {
@@ -69,8 +69,8 @@ static bool call(ObjFunction *function, i32 argCount) {
         return false;
     }
     CallFrame *frame = &vm.frames[vm.frameCount++];
-    frame->function = function;
-    frame->ip = function->chunk.code;
+    frame->closure = closure;
+    frame->ip = closure->function->chunk.code;
     frame->slots = vm.stackTop - argCount - 1;
     return true;
 }
@@ -78,8 +78,6 @@ static bool call(ObjFunction *function, i32 argCount) {
 static bool callValue(Value callee, i32 argCount) {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
-        case OBJ_FUNCTION:
-            return call(AS_FUNCTION(callee), argCount);
         case OBJ_NATIVE: {
             NativeFn native = AS_NATIVE(callee);
             Value const result = native(argCount, vm.stackTop - argCount);
@@ -87,6 +85,8 @@ static bool callValue(Value callee, i32 argCount) {
             push(result);
             return true;
         }
+        case OBJ_CLOSURE:
+            return call(AS_CLOSURE(callee), argCount);
         default:
             break;
         }
@@ -118,7 +118,7 @@ static InterpretResult run(void) {
     CallFrame *frame = &vm.frames[vm.frameCount - 1];
 
 #define READ_BYTE() (*frame->ip++)
-#define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
+#define READ_CONSTANT() (frame->closure->function->chunk.constants.values[READ_BYTE()])
 #define READ_SHORT() \
     (frame->ip += 2U, (u16)((u16)(frame->ip[-2] << 8U) | frame->ip[-1]))
 #define READ_STRING() AS_STRING(READ_CONSTANT())
@@ -142,7 +142,7 @@ static InterpretResult run(void) {
             printf(" ]");
         }
         printf("\n");
-        disassembleInstruction(&frame->function->chunk, (usize)(frame->ip - frame->function->chunk.code));
+        disassembleInstruction(&frame->closure->function->chunk, (usize)(frame->ip - frame->function->chunk.code));
 #endif
         u8 const instruction = READ_BYTE();
         switch (instruction) {
@@ -282,6 +282,12 @@ static InterpretResult run(void) {
             frame = &vm.frames[vm.frameCount - 1];
             break;
         }
+        case OP_CLOSURE: {
+            ObjFunction *function = AS_FUNCTION(READ_CONSTANT());
+            ObjClosure *closure = newClosure(function);
+            push(OBJ_VAL(closure));
+            break;
+        }
         }
     }
 
@@ -322,7 +328,10 @@ InterpretResult interpret(const char *source) {
     if (function == NULL) { return INTERPRET_COMPILE_ERROR; }
 
     push(OBJ_VAL(function));
-    call(function, 0);
+    ObjClosure *closure = newClosure(function);
+    pop();
+    push(OBJ_VAL(closure));
+    call(closure, 0);
 
     return run();
 }

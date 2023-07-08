@@ -30,6 +30,7 @@ typedef enum {
     OP_LOOP,
     OP_CALL,
     OP_JUMP,
+    OP_CLOSURE,
 } OpCode;
 
 typedef struct {

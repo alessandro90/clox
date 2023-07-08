@@ -12,7 +12,7 @@
 
 // Represents a single ongoing function call
 typedef struct {
-    ObjFunction *function;
+    ObjClosure *closure;
     u8 *ip;
     Value *slots;
 } CallFrame;
