@@ -495,6 +495,10 @@ static i32 resolveUpvalue(Compiler *compiler, Token *name) {
     if (local != -1) {
         return addUpvalue(compiler, (u8)local, true);
     }
+    i32 const upvalue = resolveUpvalue(compiler->enclosing, name);
+    if (upvalue != -1) {
+        return addUpvalue(compiler, (u8)upvalue, false);
+    }
     return -1;
 }
 
@@ -604,6 +608,11 @@ static void function(FunctionType type) {
 
     ObjFunction *function = endCompiler();
     emitBytes(OP_CLOSURE, makeConstant(OBJ_VAL(function)));
+
+    for (i32 i = 0; i < function->upvalueCount; ++i) {
+        emitByte(compiler.upvalues[i].isLocal ? 1 : 0);
+        emitByte(compiler.upvalues[i].index);
+    }
 }
 
 static void funDeclaration(void) {

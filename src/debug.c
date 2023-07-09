@@ -1,6 +1,7 @@
 #include "debug.h"
 #include "chunk.h"
 #include "common.h"
+#include "object.h"
 #include "value.h"
 #include <stdio.h>
 
@@ -88,6 +89,10 @@ usize disassembleInstruction(Chunk const *chunk, usize offset) {
         return byteInstruction("OP_GET_LOCAL", chunk, offset);
     case OP_SET_LOCAL:
         return byteInstruction("OP_SET_LOCAL", chunk, offset);
+    case OP_GET_UPVALUE:
+        return byteInstruction("OP_GET_VALUE", chunk, offset);
+    case OP_SET_UPVALUE:
+        return byteInstruction("OP_SET_VALUE", chunk, offset);
     case OP_JUMP_IF_FALSE:
         return jumpInstruction("OP_JUMP_IF_FALSE", 1, chunk, offset);
     case OP_JUMP:
@@ -102,6 +107,12 @@ usize disassembleInstruction(Chunk const *chunk, usize offset) {
         printf("%-16s %4d ", "OP_CLOSURE", constant);
         printValue(chunk->constants.values[constant]);
         printf("\n");
+        ObjFunction *function = AS_FUNCTION(chunk->constants.values[constant]);
+        for (i32 j = 0; j < function->upvalueCount; ++j) {
+            i32 const isLocal = chunk->code[offset++];
+            i32 const index = chunk->code[offset++];
+            printf("%04lu      |                     %s %d\n", offset - 2U, isLocal ? "local" : "upvalue", index);
+        }
         return offset;
     }
     }
