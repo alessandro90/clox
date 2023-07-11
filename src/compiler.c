@@ -470,12 +470,12 @@ static i32 resolveLocal(Compiler *compiler, Token *name) {
 }
 
 static i32 addUpvalue(Compiler *compiler, u8 index, bool isLocal) {
-    i32 const upvalueCount = compiler->function->upvalueCount;
+    usize const upvalueCount = compiler->function->upvalueCount;
 
-    for (i32 i = 0; i < upvalueCount; ++i) {
+    for (usize i = 0; i < upvalueCount; ++i) {
         Upvalue *upvalue = &compiler->upvalues[i];
         if (upvalue->index == index && upvalue->isLocal == isLocal) {
-            return i;
+            return (i32)i;
         }
     }
 
@@ -486,7 +486,7 @@ static i32 addUpvalue(Compiler *compiler, u8 index, bool isLocal) {
 
     compiler->upvalues[upvalueCount].isLocal = isLocal;
     compiler->upvalues[upvalueCount].index = index;
-    return compiler->function->upvalueCount++;
+    return (i32)compiler->function->upvalueCount++;
 }
 
 static i32 resolveUpvalue(Compiler *compiler, Token *name) {
@@ -609,7 +609,7 @@ static void function(FunctionType type) {
     ObjFunction *function = endCompiler();
     emitBytes(OP_CLOSURE, makeConstant(OBJ_VAL(function)));
 
-    for (i32 i = 0; i < function->upvalueCount; ++i) {
+    for (usize i = 0; i < function->upvalueCount; ++i) {
         emitByte(compiler.upvalues[i].isLocal ? 1 : 0);
         emitByte(compiler.upvalues[i].index);
     }

@@ -108,7 +108,7 @@ usize disassembleInstruction(Chunk const *chunk, usize offset) {
         printValue(chunk->constants.values[constant]);
         printf("\n");
         ObjFunction *function = AS_FUNCTION(chunk->constants.values[constant]);
-        for (i32 j = 0; j < function->upvalueCount; ++j) {
+        for (usize j = 0; j < function->upvalueCount; ++j) {
             i32 const isLocal = chunk->code[offset++];
             i32 const index = chunk->code[offset++];
             printf("%04lu      |                     %s %d\n", offset - 2U, isLocal ? "local" : "upvalue", index);
