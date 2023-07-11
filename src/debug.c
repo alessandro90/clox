@@ -115,6 +115,8 @@ usize disassembleInstruction(Chunk const *chunk, usize offset) {
         }
         return offset;
     }
+    case OP_CLOSE_UPVALUE:
+        return simpleInstruction("OP_CLOSE_UPVALUE", offset);
     }
     printf("Unknown opcode %d\n", (i32)instruction);
     return offset + 1U;
