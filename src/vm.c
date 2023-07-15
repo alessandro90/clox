@@ -116,6 +116,15 @@ static ObjUpvalue *captureUpvalue(Value *local) {
     return createdUpvalue;
 }
 
+static void closeUpvalues(Value *last) {
+    while (vm.openUpvalues != NULL && vm.openUpvalues->location >= last) {
+        ObjUpvalue *upvalue = vm.openUpvalues;
+        upvalue->closed = *upvalue->location;
+        upvalue->location = &upvalue->closed;
+        vm.openUpvalues = upvalue->next;
+    }
+}
+
 static bool isFalsey(Value value) {
     return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
@@ -284,6 +293,7 @@ static InterpretResult run(void) {
         }
         case OP_RETURN: {
             Value const result = pop();
+            closeUpvalues(frame->slots);
             --vm.frameCount;
             // Last frame. Pop the main scrip function
             if (vm.frameCount == 0) {
@@ -328,6 +338,10 @@ static InterpretResult run(void) {
             *frame->closure->upvalues[slot]->location = peek(0);
             break;
         }
+        case OP_CLOSE_UPVALUE:
+            closeUpvalues(vm.stackTop - 1U);
+            pop();
+            break;
         }
     }
 
