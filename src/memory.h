@@ -20,5 +20,7 @@
 
 void *reallocate(void *pointer, usize oldSize, usize newSize);
 
+void collectGarbage(void);
+
 void freeObjects(void);
 #endif
