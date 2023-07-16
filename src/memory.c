@@ -1,6 +1,8 @@
 #include "memory.h"
+
 #include "chunk.h"
 #include "common.h"
+#include "compiler.h"
 #include "object.h"
 #include "value.h"
 #include "vm.h"
@@ -77,7 +79,17 @@ static void markRoots(void) {
         markValue(*slot);
     }
 
+    for (i32 i = 0; i < vm.frameCount; ++i) {
+        markObject((Obj *)vm.frames[i].closure);
+    }
+
+    for (ObjUpvalue *upvalue = vm.openUpvalues; upvalue != NULL; upvalue = upvalue->next) {
+        markObject((Obj *)upvalue);
+    }
+
+
     markTable(&vm.globals);
+    markCompilerRoots();
 }
 
 void collectGarbage(void) {

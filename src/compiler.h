@@ -6,5 +6,6 @@
 #include <stdbool.h>  // NOLINT
 
 ObjFunction *compile(const char *source);
+void markCompilerRoots(void);
 
 #endif
