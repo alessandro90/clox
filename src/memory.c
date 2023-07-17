@@ -6,6 +6,7 @@
 #include "object.h"
 #include "value.h"
 #include "vm.h"
+#include <assert.h>
 #include <stdlib.h>
 #ifdef DEBUG_LOG_GC
 #include "debug.h"
@@ -37,6 +38,15 @@ void markObject(Obj *object) {
     printf("\n");
 #endif
     object->isMarked = true;
+
+    if (vm.grayCapacity < vm.grayCount + 1U) {
+        vm.grayCapacity = GROW_CAPACITY(vm.grayCapacity);
+        Obj **newGrayStack = (Obj **)realloc(vm.grayStack, sizeof(Obj *) * vm.grayCapacity);
+        assert(newGrayStack != NULL);
+        vm.grayStack = newGrayStack;
+    }
+
+    vm.grayStack[vm.grayCount++] = object;
 }
 
 void markValue(Value value) {
@@ -111,4 +121,5 @@ void freeObjects(void) {
         freeObject(object);
         object = next;
     }
+    free(vm.grayStack);
 }
