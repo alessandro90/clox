@@ -6,7 +6,6 @@
 #include "object.h"
 #include "value.h"
 #include "vm.h"
-#include <assert.h>
 #include <stdlib.h>
 #ifdef DEBUG_LOG_GC
 #include "debug.h"
@@ -43,7 +42,7 @@ void markObject(Obj *object) {
     if (vm.grayCapacity < vm.grayCount + 1U) {
         vm.grayCapacity = GROW_CAPACITY(vm.grayCapacity);
         Obj **newGrayStack = (Obj **)realloc(vm.grayStack, sizeof(Obj *) * vm.grayCapacity);
-        assert(newGrayStack != NULL);
+        if (newGrayStack == NULL) { exit(1); }  // NOLINT
         vm.grayStack = newGrayStack;
     }
 
@@ -147,6 +146,27 @@ static void traceReferences(void) {
     }
 }
 
+static void sweep(void) {
+    Obj *previous = NULL;
+    Obj *object = vm.objects;
+    while (object != NULL) {
+        if (object->isMarked) {
+            object->isMarked = false;
+            previous = object;
+            object = object->next;
+        } else {
+            Obj *unreached = object;
+            object = object->next;
+            if (previous != NULL) {
+                previous->next = object;
+            } else {
+                vm.objects = object;
+            }
+            freeObject(unreached);
+        }
+    }
+}
+
 void collectGarbage(void) {
 #ifdef DEBUG_LOG_GC
     printf("-- gc begin\n");
@@ -154,6 +174,7 @@ void collectGarbage(void) {
 
     markRoots();
     traceReferences();
+    sweep();
 
 #ifdef DEBUG_LOG_GC
     printf("-- gc end\n");
