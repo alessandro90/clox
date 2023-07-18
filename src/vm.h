@@ -25,6 +25,8 @@ typedef struct {
     Table globals;
     Table strings;
     ObjUpvalue *openUpvalues;
+    usize bytesAllocated;
+    usize nextGC;
     Obj *objects;
     usize grayCount;
     usize grayCapacity;
