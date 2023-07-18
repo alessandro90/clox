@@ -22,6 +22,7 @@ bool tableGet(Table *table, ObjString *key, Value *value);
 bool tableDelete(Table *table, ObjString *key);
 void tableAddAll(Table const *from, Table *to);
 ObjString *tableFindString(Table *table, const char *chars, usize length, u32 hash);
+void tableRemoveWhite(Table *);
 void markTable(Table *table);
 
 #endif

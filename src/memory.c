@@ -174,6 +174,7 @@ void collectGarbage(void) {
 
     markRoots();
     traceReferences();
+    tableRemoveWhite(&vm.strings);
     sweep();
 
 #ifdef DEBUG_LOG_GC
