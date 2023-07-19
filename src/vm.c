@@ -130,8 +130,8 @@ static bool isFalsey(Value value) {
 }
 
 static void concatenate(void) {
-    ObjString const *b = AS_STRING(pop());
-    ObjString const *a = AS_STRING(pop());
+    ObjString const *b = AS_STRING(peek(0));
+    ObjString const *a = AS_STRING(peek(1));
 
     usize const length = a->length + b->length;
     char *chars = ALLOCATE(char, length + 1);
@@ -140,6 +140,8 @@ static void concatenate(void) {
     chars[length] = '\0';
 
     ObjString *result = takeString(chars, length);
+    pop();
+    pop();
     push(OBJ_VAL(result));
 }
 
