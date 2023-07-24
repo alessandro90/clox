@@ -344,6 +344,9 @@ static InterpretResult run(void) {
             closeUpvalues(vm.stackTop - 1U);
             pop();
             break;
+        case OP_CLASS:
+            push(OBJ_VAL(newClass(READ_STRING())));
+            break;
         }
     }
 
