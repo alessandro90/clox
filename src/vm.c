@@ -88,6 +88,11 @@ static bool callValue(Value callee, i32 argCount) {
         }
         case OBJ_CLOSURE:
             return call(AS_CLOSURE(callee), argCount);
+        case OBJ_CLASS: {
+            ObjClass *klass = AS_CLASS(callee);
+            vm.stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
+            return true;
+        }
         default:
             break;
         }
