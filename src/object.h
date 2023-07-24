@@ -7,6 +7,8 @@
 
 #define OBJ_TYPE(value) (AS_OBJ(value)->type)
 
+#define IS_CLASS(value) isObjType(value, OBJ_CLASS)
+
 #define IS_CLOSURE(value) isObjType(value, OBJ_CLOSURE)
 
 #define IS_FUNCTION(value) isObjType(value, OBJ_FUNCTION)
@@ -15,6 +17,7 @@
 
 #define IS_NATIVE(value) isObjType(value, OBJ_NATIVE)
 
+#define AS_CLASS(value) ((ObjClass *)AS_OBJ(value))
 #define AS_CLOSURE(value) ((ObjClosure *)AS_OBJ(value))
 #define AS_FUNCTION(value) ((ObjFunction *)AS_OBJ(value))
 #define AS_STRING(value) ((ObjString *)AS_OBJ(value))
@@ -28,6 +31,7 @@ typedef enum {
     OBJ_NATIVE,
     OBJ_CLOSURE,
     OBJ_UPVALUE,
+    OBJ_CLASS,
 } ObjType;
 
 struct Obj {
@@ -72,6 +76,12 @@ typedef struct {
     usize upvalueCount;
 } ObjClosure;
 
+typedef struct {
+    Obj obj;
+    ObjString *name;
+} ObjClass;
+
+ObjClass *newClass(ObjString *name);
 ObjClosure *newClosure(ObjFunction *function);
 ObjFunction *newFunction(void);
 
