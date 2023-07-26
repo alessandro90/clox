@@ -130,6 +130,13 @@ static void closeUpvalues(Value *last) {
     }
 }
 
+static void defineMethod(ObjString *name) {
+    Value const method = peek(0);
+    ObjClass *klass = AS_CLASS(peek(1));
+    tableSet(&klass->methods, name, method);
+    pop();
+}
+
 static bool isFalsey(Value value) {
     return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
@@ -179,7 +186,7 @@ static InterpretResult run(void) {
             printf(" ]");
         }
         printf("\n");
-        disassembleInstruction(&frame->closure->function->chunk, (usize)(frame->ip - frame->function->chunk.code));
+        disassembleInstruction(&frame->closure->function->chunk, (usize)(frame->ip - frame->closure->function->chunk.code));
 #endif
         u8 const instruction = READ_BYTE();
         switch (instruction) {
@@ -386,6 +393,9 @@ static InterpretResult run(void) {
             push(value);  // put value back into the stack (OP_SET_PROPERTY is an expression)
             break;
         }
+        case OP_METHOD:
+            defineMethod(READ_STRING());
+            break;
         }
     }
 

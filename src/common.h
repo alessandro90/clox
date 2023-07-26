@@ -23,10 +23,10 @@ typedef size_t usize;
 // #define DEBUG_TRACE_EXECUTION
 
 // NOLINTNEXTLINE
-#define DEBUG_STRESS_GC
+// #define DEBUG_STRESS_GC
 
 // NOLINTNEXTLINE
-#define DEBUG_LOG_GC
+// #define DEBUG_LOG_GC
 
 // NOLINTNEXTLINE
 #define DEBUG_PRINT_CODE
