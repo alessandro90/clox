@@ -71,8 +71,13 @@ typedef struct Compiler {
     i32 scopeDepth;
 } Compiler;
 
+typedef struct ClassCompiler {
+    struct ClassCompiler *enclosing;
+} ClassCompiler;
+
 Parser parser;  // NOLINT
 Compiler *current = NULL;  // NOLINT
+ClassCompiler *currentClass = NULL;  // NOLINT
 
 static void expression(void);
 static void statement(void);
@@ -387,6 +392,10 @@ static void variable(bool canAssign) {
 
 static void this_(bool canAssing) {
     (void)canAssing;
+    if (currentClass == NULL) {
+        error("Can't use 'this' outside of a class.");
+        return;
+    }
     variable(false);
 }
 
@@ -664,6 +673,10 @@ static void classDeclaration(void) {
     emitBytes(OP_CLASS, nameConstant);
     defineVariable(nameConstant);
 
+    ClassCompiler classCompiler;
+    classCompiler.enclosing = currentClass;
+    currentClass = &classCompiler;
+
     namedVariable(className, false);
 
     consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
@@ -672,6 +685,8 @@ static void classDeclaration(void) {
     }
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
     emitByte(OP_POP);
+
+    currentClass = currentClass->enclosing;
 }
 
 static void funDeclaration(void) {
