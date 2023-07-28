@@ -109,6 +109,13 @@ ObjUpvalue *newUpvalue(Value *slot) {
     return upvalue;
 }
 
+ObjBoundMethod *newBoundMethod(Value receiver, ObjClosure *method) {
+    ObjBoundMethod *bound = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD);
+    bound->receiver = receiver;
+    bound->method = method;
+    return bound;
+}
+
 static void printFunction(ObjFunction *function) {
     if (function->name == NULL) {
         printf("<script>");
@@ -139,6 +146,9 @@ void printObject(Value value) {
         break;
     case OBJ_INSTANCE:
         printf("%s instance", AS_INSTANCE(value)->klass->name->chars);
+        break;
+    case OBJ_BOUND_METHOD:
+        printFunction(AS_BOUND_METHOD(value)->method->function);
         break;
     }
 }
