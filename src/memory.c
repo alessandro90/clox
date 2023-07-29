@@ -177,6 +177,8 @@ static void markRoots(void) {
 
     markTable(&vm.globals);
     markCompilerRoots();
+    vm.initString = NULL;  // Prevent GC to read garbage from initString if triggered from copyString
+    markObject((Obj *)vm.initString);
 }
 
 static void traceReferences(void) {
