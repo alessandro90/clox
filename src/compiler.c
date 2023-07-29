@@ -177,7 +177,7 @@ static usize emitJump(OpCode instruction) {
 
 static void emitReturn(void) {
     if (current->type == TYPE_INITIALIZER) {
-        emitBytes(OP_GET_GLOBAL, 0);
+        emitBytes(OP_GET_LOCAL, 0);
     } else {
         emitByte(OP_NIL);
     }
@@ -806,6 +806,9 @@ static void returnStatement(void) {
     if (match(TOKEN_SEMICOLON)) {
         emitReturn();
     } else {
+        if (current->type == TYPE_INITIALIZER) {
+            error("Can't return a value from an initializer.");
+        }
         expression();
         consume(TOKEN_SEMICOLON, "Expect ';' after return value.");
         emitByte(OP_RETURN);
