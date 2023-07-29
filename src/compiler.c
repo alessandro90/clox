@@ -57,6 +57,7 @@ typedef struct {
 
 typedef enum {
     TYPE_FUNCTION,
+    TYPE_INITIALIZER,
     TYPE_METHOD,
     TYPE_SCRIPT,
 } FunctionType;
@@ -175,7 +176,11 @@ static usize emitJump(OpCode instruction) {
 }
 
 static void emitReturn(void) {
-    emitByte(OP_NIL);
+    if (current->type == TYPE_INITIALIZER) {
+        emitBytes(OP_GET_GLOBAL, 0);
+    } else {
+        emitByte(OP_NIL);
+    }
     emitByte(OP_RETURN);
 }
 
@@ -660,6 +665,9 @@ static void method(void) {
     consume(TOKEN_IDENTIFIER, "Expect method name.");
     u8 const constant = identifierConstant(&parser.previous);
     FunctionType type = TYPE_METHOD;
+    if (parser.previous.length == 4 && memcmp(parser.previous.start, "init", 4) == 0) {
+        type = TYPE_INITIALIZER;
+    }
     function(type);
     emitBytes(OP_METHOD, constant);
 }
