@@ -456,6 +456,10 @@ static InterpretResult run(void) {
         }
         case OP_INHERIT: {
             Value superclass = peek(1);
+            if (!IS_CLASS(superclass)) {
+                runtimeError("Superclass must be a class.");
+                return INTERPRET_RUNTIME_ERROR;
+            }
             ObjClass *subclass = AS_CLASS(peek(0));
             // We still have to compile subclass methods. Any method of the subclass
             // with the same name as one from the superclass will in fact override
