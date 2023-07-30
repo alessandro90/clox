@@ -498,7 +498,7 @@ static u8 identifierConstant(Token *name) {
     return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
 }
 
-static bool identifiersEqual(Token *a, Token *b) {
+static bool identifiersEqual(Token const *a, Token const *b) {
     if (a->length != b->length) { return false; }
     assert(a != NULL && b != NULL && a->start != NULL && b->start != NULL);
     return memcmp(a->start, b->start, a->length) == 0;
@@ -688,6 +688,16 @@ static void classDeclaration(void) {
     ClassCompiler classCompiler;
     classCompiler.enclosing = currentClass;
     currentClass = &classCompiler;
+
+    if (match(TOKEN_LESS)) {
+        consume(TOKEN_IDENTIFIER, "Expect superclass name.");
+        variable(false);
+        if (identifiersEqual(&className, &parser.previous)) {
+            error("A class can't inherit from itself.");
+        }
+        namedVariable(className, false);
+        emitByte(OP_INHERIT);
+    }
 
     namedVariable(className, false);
 
