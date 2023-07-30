@@ -320,6 +320,10 @@ static void dot(bool canAssign) {
     if (canAssign && match(TOKEN_EQUAL)) {
         expression();
         emitBytes(OP_SET_PROPERTY, name);
+    } else if (match(TOKEN_LEFT_PAREN)) {
+        u8 const argCount = argumentList();
+        emitBytes(OP_INVOKE, name);
+        emitByte(argCount);
     } else {
         emitBytes(OP_GET_PROPERTY, name);
     }

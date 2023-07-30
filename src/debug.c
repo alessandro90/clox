@@ -31,6 +31,15 @@ static usize constantInstruction(const char *name, Chunk const *chunk, usize off
     return offset + 2U;
 }
 
+static usize invokeInstruction(const char *name, Chunk const *chunk, usize offset) {
+    u8 const constant = chunk->code[offset + 1];
+    u8 const argCount = chunk->code[offset + 2];
+    printf("%-16s (%d args) %4d '", name, argCount, constant);
+    printValue(chunk->constants.values[constant]);
+    printf("'\n");
+    return offset + 3U;
+}
+
 void disassembleChunk(Chunk const *chunk, const char *name) {
     printf("== %s ==\n", name);
     for (usize offset = 0; offset < chunk->count;) {
@@ -125,6 +134,8 @@ usize disassembleInstruction(Chunk const *chunk, usize offset) {
         return constantInstruction("OP_SET_PROPERTY", chunk, offset);
     case OP_METHOD:
         return constantInstruction("OP_METHOD", chunk, offset);
+    case OP_INVOKE:
+        return invokeInstruction("OP_INVOKE", chunk, offset);
     }
     printf("Unknown opcode %d\n", (i32)instruction);
     return offset + 1U;
