@@ -454,6 +454,16 @@ static InterpretResult run(void) {
             frame = &vm.frames[vm.frameCount - 1];
             break;
         }
+        case OP_INHERIT: {
+            Value superclass = peek(1);
+            ObjClass *subclass = AS_CLASS(peek(0));
+            // We still have to compile subclass methods. Any method of the subclass
+            // with the same name as one from the superclass will in fact override
+            // the supeclass method
+            tableAddAll(&AS_CLASS(superclass)->methods, &subclass->methods);
+            pop();  // subclass
+            break;
+        }
         }
     }
 
