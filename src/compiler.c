@@ -418,8 +418,15 @@ static void super_(bool canAssing) {
     consume(TOKEN_IDENTIFIER, "Expect supeclass method name.");
     u8 const name = identifierConstant(&parser.previous);
     namedVariable(syntheticToken("this"), false);
-    namedVariable(syntheticToken("super"), false);
-    emitBytes(OP_GET_SUPER, name);
+    if (match(TOKEN_LEFT_PAREN)) {
+        u8 const argCount = argumentList();
+        namedVariable(syntheticToken("super"), false);
+        emitBytes(OP_SUPER_INVOKE, name);
+        emitByte(argCount);
+    } else {
+        namedVariable(syntheticToken("super"), false);
+        emitBytes(OP_GET_SUPER, name);
+    }
 }
 
 static void this_(bool canAssing) {
