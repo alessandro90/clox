@@ -138,6 +138,8 @@ usize disassembleInstruction(Chunk const *chunk, usize offset) {
         return invokeInstruction("OP_INVOKE", chunk, offset);
     case OP_INHERIT:
         return simpleInstruction("OP_INHERIT", offset);
+    case OP_GET_SUPER:
+        return constantInstruction("OP_GET_SUPER", chunk, offset);
     }
     printf("Unknown opcode %d\n", (i32)instruction);
     return offset + 1U;
