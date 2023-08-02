@@ -14,7 +14,7 @@ void initTable(Table *table) {
 }
 
 static Entry *findEntry(Entry *entries, usize capacity, ObjString *key) {
-    usize index = key->hash % capacity;
+    usize index = key->hash & (capacity - 1U);
     Entry *tombstone = NULL;
     while (true) {
         Entry *entry = &entries[index];
@@ -26,7 +26,7 @@ static Entry *findEntry(Entry *entries, usize capacity, ObjString *key) {
         } else if (entry->key == key) {
             return entry;
         }
-        index = (index + 1U) % capacity;
+        index = (index + 1U) & (capacity - 1U);
     }
 }
 
@@ -111,7 +111,7 @@ ObjString *tableFindString(Table *table, const char *chars, usize length, u32 ha
                    && memcmp(entry->key->chars, chars, length) == 0) {
             return entry->key;
         }
-        index = (index + 1U) % table->capacity;
+        index = (index + 1U) & (table->capacity - 1U);
     }
 }
 
