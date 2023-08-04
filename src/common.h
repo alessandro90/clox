@@ -29,6 +29,9 @@ typedef size_t usize;
 // #define DEBUG_LOG_GC
 
 // NOLINTNEXTLINE
+#define NAN_BOXING
+
+// NOLINTNEXTLINE
 // #define DEBUG_PRINT_CODE
 
 // NOLINTNEXTLINE
