@@ -60,4 +60,14 @@ set(
     table.c
 )
 
+include(CheckIPOSupported)
+check_ipo_supported(RESULT supported OUTPUT error)
+
 add_executable(clox ${SRC_FILES})
+
+if( supported )
+    message(STATUS "IPO / LTO enabled")
+    set_property(TARGET clox PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+else()
+    message(STATUS "IPO / LTO not supported: <${error}>")
+endif()
