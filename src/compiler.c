@@ -821,8 +821,6 @@ static void forStatement(void) {
         exitJump = emitJump(OP_JUMP_IF_FALSE);
         emitByte(OP_POP);
     }
-    consume(TOKEN_SEMICOLON, "Expect ';'.");
-    consume(TOKEN_RIGHT_PAREN, "Expect ')' after for clauses.");
 
     if (!match(TOKEN_RIGHT_PAREN)) {
         usize const bodyJump = emitJump(OP_JUMP);
